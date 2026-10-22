@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIM Studio: EIR to BEP Data Extractor</title>
+  <title>KLUST BIM Studio: EIR to Autodesk Forma</title>
   <style>
     :root {
       --bg-dark: #12161f;
@@ -18,25 +18,28 @@
       --success: #16a34a;
       --error: #dc2626;
       --accent: #f59e0b;
+      --warning: #f59e0b;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-dark);
       color: var(--text-main);
       height: 100vh;
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
     }
 
-    /* Top Navigation Bar */
+    .app-view {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      transition: opacity 0.3s ease;
+    }
+
+    /* --- SHARED HEADER --- */
     header {
       background-color: #0f172a;
       color: #f8fafc;
@@ -45,807 +48,78 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #334155;
+      height: 55px;
     }
-
-    header .brand-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
+    header .brand-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
     header .brand-badge {
-      background: #0284c7;
-      font-size: 0.75rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .progress-container {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.85rem;
-      color: #94a3b8;
-    }
-
-    .progress-bar-bg {
-      width: 140px;
-      height: 8px;
-      background-color: #334155;
-      border-radius: 9999px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      width: 0%;
-      height: 100%;
-      background-color: var(--brand-primary);
-      transition: width 0.3s ease;
-    }
-
-    /* Main Workspace Split Layout */
-    .workspace {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 55px);
-      overflow: hidden;
-    }
-
-    /* Left Panel: Reference Documents (40%) */
-    .left-panel {
-      flex: 0 0 42%;
-      background-color: var(--doc-bg);
-      border-right: 1px solid #cbd5e1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .tab-bar {
-      display: flex;
-      background-color: #e2e8f0;
-      border-bottom: 1px solid #cbd5e1;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border: none;
-      background: transparent;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-    }
-
-    .tab-btn.active {
-      background-color: var(--doc-bg);
-      color: var(--brand-primary);
-      border-bottom: 2px solid var(--brand-primary);
-    }
-
-    .tab-badge {
-      background: #dc2626;
-      color: white;
-      font-size: 0.65rem;
-      padding: 0.1rem 0.35rem;
-      border-radius: 999px;
-      font-weight: 700;
-    }
-
-    .doc-viewer {
-      flex: 1;
-      padding: 2rem;
-      overflow-y: auto;
-      line-height: 1.65;
-      font-size: 0.95rem;
-      color: #334155;
-    }
-
-    .tab-pane {
-      display: none;
-    }
-
-    .tab-pane.active {
-      display: block;
-    }
-
-    .doc-header {
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .doc-header h2 {
-      font-size: 1.3rem;
-      color: #0f172a;
-      margin-bottom: 0.25rem;
-    }
-
-    .doc-meta {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .doc-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .doc-section h3 {
-      font-size: 1rem;
-      color: #0f172a;
-      margin-bottom: 0.4rem;
-    }
-
-    .callout-box {
-      background: #eff6ff;
-      border-left: 4px solid var(--brand-primary);
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      font-size: 0.85rem;
-      border-radius: 0 4px 4px 0;
-    }
-
-    /* Right Panel: Interactive BEP Form (58%) */
-    .right-panel {
-      flex: 1;
-      background-color: var(--panel-bg);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .form-header {
-      padding: 1.5rem 2rem 1rem;
-      border-bottom: 1px solid var(--panel-border);
-      background-color: #ffffff;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .form-header h1 {
-      font-size: 1.35rem;
-      color: #0f172a;
-    }
-
-    .form-header p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
-
-    .form-body {
-      padding: 1.5rem 2rem 3rem;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-
-    .form-card {
-      background: #ffffff;
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    }
-
-    .form-card h2 {
-      font-size: 1rem;
-      color: #0f172a;
-      border-bottom: 1px solid #f1f5f9;
-      padding-bottom: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .input-group {
-      margin-bottom: 1.25rem;
-    }
-
-    .input-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .input-group label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #334155;
-      margin-bottom: 0.35rem;
-    }
-
-    .input-group .field-instruction {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 0.4rem;
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .input-control {
-      width: 100%;
-      padding: 0.6rem 0.8rem;
-      font-size: 0.9rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      outline: none;
-      transition: all 0.2s ease;
-      background: #fff;
-    }
-
-    .input-control:focus {
-      border-color: var(--brand-primary);
-      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-    }
-
-    .input-control.valid {
-      border-color: var(--success);
-      background-color: #f0fdf4;
-    }
-
-    .input-control.invalid {
-      border-color: var(--error);
-      background-color: #fef2f2;
-    }
-
-    .feedback-msg {
-      font-size: 0.78rem;
-      margin-top: 0.35rem;
-      line-height: 1.4;
-      display: none;
-    }
-
-    .feedback-msg.show {
-      display: block;
-    }
-
-    .feedback-msg.error {
-      color: var(--error);
-      font-weight: 500;
-    }
-
-    .feedback-msg.success {
-      color: var(--success);
-      font-weight: 500;
-    }
-
-    /* Footer / Submit */
-    .form-footer {
-      margin-top: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .submit-btn {
-      width: 100%;
-      padding: 0.85rem;
-      background-color: var(--brand-primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .submit-btn:disabled {
-      background-color: #94a3b8;
-      cursor: not-allowed;
-    }
-
-    .submit-btn:not(:disabled):hover {
-      background-color: var(--brand-primary-hover);
-    }
-
-    /* Modal for Gateway Approval */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(15, 23, 42, 0.75);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal-card {
-      background: white;
-      width: 100%;
-      max-width: 520px;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-      text-align: center;
-    }
-
-    .modal-icon {
-      width: 56px;
-      height: 56px;
-      background: #dcfce7;
-      color: var(--success);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.75rem;
-      margin: 0 auto 1.25rem;
-    }
-
-    .modal-card h3 {
-      font-size: 1.35rem;
-      color: #0f172a;
-      margin-bottom: 0.5rem;
-    }
-
-    .modal-card p {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-      margin-bottom: 1.5rem;
-    }
-
-    .modal-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .btn-action {
-      display: inline-block;
-      padding: 0.75rem 1.25rem;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .btn-forma {
       background: var(--brand-primary);
-      color: white;
-      border: none;
+      font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;
     }
+    .progress-container { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: #94a3b8; }
+    .progress-bar-bg { width: 140px; height: 8px; background-color: #334155; border-radius: 9999px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; transition: width 0.3s ease; }
+    .fill-blue { background-color: var(--brand-primary); width: 0%; }
+    .fill-green { background-color: var(--success); width: 0%; }
 
-    .btn-forma:hover {
-      background: var(--brand-primary-hover);
-    }
+    .workspace { display: flex; flex: 1; height: calc(100vh - 55px); overflow: hidden; }
 
-    .btn-dismiss {
-      background: #f1f5f9;
-      color: #334155;
-      border: 1px solid #cbd5e1;
-    }
+    /* =========================================
+       VIEW 1: EIR TO BEP SIMULATOR
+       ========================================= */
+    .left-panel { flex: 0 0 42%; background-color: var(--doc-bg); border-right: 1px solid #cbd5e1; display: flex; flex-direction: column; overflow: hidden; }
+    .tab-bar { display: flex; background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
+    .tab-btn { flex: 1; padding: 0.75rem 1rem; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+    .tab-btn.active { background-color: var(--doc-bg); color: var(--brand-primary); border-bottom: 2px solid var(--brand-primary); }
+    .tab-badge { background: #dc2626; color: white; font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 999px; font-weight: 700; }
+    
+    .doc-viewer { flex: 1; padding: 2rem; overflow-y: auto; line-height: 1.65; font-size: 0.95rem; color: #334155; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .doc-header { border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .doc-header h2 { font-size: 1.3rem; color: #0f172a; margin-bottom: 0.25rem; }
+    .doc-meta { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .doc-section { margin-bottom: 1.5rem; }
+    .doc-section h3 { font-size: 1rem; color: #0f172a; margin-bottom: 0.4rem; }
+    .callout-box { background: #eff6ff; border-left: 4px solid var(--brand-primary); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; border-radius: 0 4px 4px 0; }
 
-    @media (max-width: 900px) {
-      .workspace {
-        flex-direction: column;
-        height: auto;
-        overflow: visible;
-      }
-      body {
-        overflow: auto;
-        height: auto;
-      }
-      .left-panel {
-        flex: none;
-        height: 450px;
-      }
-      .right-panel {
-        flex: none;
-      }
-    }
-  </style>
-</head>
-<body>
+    .right-panel { flex: 1; background-color: var(--panel-bg); display: flex; flex-direction: column; overflow-y: auto; }
+    .form-header { padding: 1.5rem 2rem 1rem; border-bottom: 1px solid var(--panel-border); background-color: #ffffff; position: sticky; top: 0; z-index: 10; }
+    .form-header h1 { font-size: 1.35rem; color: #0f172a; }
+    .form-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .form-body { padding: 1.5rem 2rem 3rem; display: flex; flex-direction: column; gap: 2rem; }
+    .form-card { background: #ffffff; border: 1px solid var(--panel-border); border-radius: 8px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); }
+    .form-card h2 { font-size: 1rem; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    
+    .input-group { margin-bottom: 1.25rem; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem; }
+    .input-group .field-instruction { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .input-control { width: 100%; padding: 0.6rem 0.8rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: all 0.2s ease; }
+    .input-control:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+    .input-control.valid { border-color: var(--success); background-color: #f0fdf4; }
+    .input-control.invalid { border-color: var(--error); background-color: #fef2f2; }
+    .feedback-msg { font-size: 0.78rem; margin-top: 0.35rem; line-height: 1.4; display: none; }
+    .feedback-msg.show { display: block; }
+    .feedback-msg.error { color: var(--error); font-weight: 500; }
+    .feedback-msg.success { color: var(--success); font-weight: 500; }
+    
+    .submit-btn { width: 100%; padding: 0.85rem; background-color: var(--brand-primary); color: white; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease; }
+    .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    .submit-btn:not(:disabled):hover { background-color: var(--brand-primary-hover); }
 
-  <!-- Top Navbar -->
-  <header>
-    <div class="brand-title">
-      <span>KLUST ARCH STUDIO</span>
-      <span class="brand-badge">BIM Gateway 01</span>
-    </div>
-    <div class="progress-container">
-      <span>BEP Completion: <strong id="progress-percent">0%</strong></span>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-fill"></div>
-      </div>
-    </div>
-  </header>
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal-overlay.active { display: flex; }
+    .modal-card { background: white; width: 100%; max-width: 520px; border-radius: 12px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); text-align: center; }
+    .modal-icon { width: 56px; height: 56px; background: #dcfce7; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1.25rem; }
+    .modal-card h3 { font-size: 1.35rem; color: #0f172a; margin-bottom: 0.5rem; }
+    .modal-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem; }
+    .modal-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+    .btn-action { display: inline-block; padding: 0.75rem 1.25rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; }
+    .btn-forma { background: var(--brand-primary); color: white; }
+    .btn-forma:hover { background: var(--brand-primary-hover); }
+    .btn-dismiss { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
 
-  <!-- Workspace Container -->
-  <div class="workspace">
-
-    <!-- Left Panel: Source Documents -->
-    <section class="left-panel">
-      <nav class="tab-bar">
-        <button class="tab-btn active" data-tab="tab-eir">EIR Document</button>
-        <button class="tab-btn" data-tab="tab-addendum">
-          Addendums <span class="tab-badge">1 New</span>
-        </button>
-        <button class="tab-btn" data-tab="tab-glossary">Glossary</button>
-      </nav>
-
-      <div class="doc-viewer">
-        
-        <!-- Tab 1: EIR -->
-        <article class="tab-pane active" id="tab-eir">
-          <div class="doc-header">
-            <h2>Employer's Information Requirements (EIR)</h2>
-            <div class="doc-meta">Project: KLUST Sustainable Innovation Pavilion | Phase: RIBA Stage 2</div>
-          </div>
-          
-          <div class="callout-box">
-            <strong>Lead Architect Note:</strong> Extract required parameters to establish the BIM Execution Plan (BEP). Pay close attention to coordinate datums, maximum volumetric extents, and programmatic calculations.
-          </div>
-
-          <div class="doc-section">
-            <h3>1.0 Site Context & Coordinate Reference</h3>
-            <p>The designated project plot for the new Sustainable Innovation Pavilion encompasses Sector B within the eastern academic perimeter. Geodetic and cadastral datasets procured via university land surveys have been established utilizing the <strong>WGS 84</strong> geographic reference datum.</p>
-            <p>The Lead Architectural team must verify that this precise reference frame is adopted within the Common Data Environment (CDE) prior to federating site topography and setting up the conceptual massing project space.</p>
-          </div>
-
-          <div class="doc-section">
-            <h3>2.0 Volumetric Constraints & Level of Information</h3>
-            <p>To preserve campus sightlines and minimize solar shadow envelopes cast upon adjoining research facilities, vertical massing shall not exceed the physical cornice elevation of the Engineering Quadrangle, benchmarked at an absolute ceiling of <strong>24.0 meters</strong> above natural ground level.</p>
-            <p>Given the current project gateway, architectural submissions do not require interior partitions, fenestration mullions, or MEP distribution pathways. Deliverables are required at <strong>LOD 100</strong> (conceptual volume, primary massing morphology, and orientation analyses).</p>
-          </div>
-
-          <div class="doc-section">
-            <h3>3.0 Programmatic Allocation & Target Areas</h3>
-            <p>The facility is intended to foster cross-disciplinary synergy. The initial brief outlined an aggregate target Gross Floor Area (GFA) of 6,500 sqm.</p>
-            <p>Spatial zoning requires that academic laboratories and core research spaces occupy forty percent (40%) of built volume. Incubators and commercial collaboration hubs must constitute exactly three-tenths (30%) of the total allocation. The balance of floor space is to be distributed between public amenities/circulation and accessible green roof terraces adhering to a strict 2:1 proportional ratio.</p>
-          </div>
-        </article>
-
-        <!-- Tab 2: Addendums -->
-        <article class="tab-pane" id="tab-addendum">
-          <div class="doc-header">
-            <h2>Project Addendum 01</h2>
-            <div class="doc-meta">Issued: October 24, 2026 | Priority: Critical Update</div>
-          </div>
-
-          <div class="callout-box" style="background:#fffbeb; border-color:var(--accent);">
-            <strong>Notice to Tenderers:</strong> Information contained herein supersedes conflicting figures provided in previous briefs. Update all planning frameworks accordingly.
-          </div>
-
-          <div class="doc-section">
-            <h3>Item A: Subsurface Utility Realignment (GFA Revision)</h3>
-            <p>Subsequent Ground Penetrating Radar (GPR) surveys revealed an unmapped municipal stormwater spine across Sector B's northern perimeter. A 6-meter protection setback is now legally enforced.</p>
-            <p>Consequently, the development envelope is compressed: the maximum permissible Gross Floor Area (GFA) previously listed as 6,500 sqm is officially amended and capped at <strong>6,000 sqm</strong>.</p>
-          </div>
-
-          <div class="doc-section">
-            <h3>Item B: Pedestrian Microclimate Standard</h3>
-            <p>Due to the introduction of an open-air ground terrace and community cafe in the southwest court, wind turbulence thresholds must be tightened. Microclimate predictive simulations must satisfy comfort levels designated for <strong>Sitting</strong> rather than standard strolling or standing.</p>
-          </div>
-        </article>
-
-        <!-- Tab 3: Glossary -->
-        <article class="tab-pane" id="tab-glossary">
-          <div class="doc-header">
-            <h2>Technical Glossary & Performance Benchmarks</h2>
-            <div class="doc-meta">Faculty Standards Manual | Version 4.2</div>
-          </div>
-
-          <div class="doc-section">
-            <h3>Key Terminology</h3>
-            <p><strong>CDE (Common Data Environment):</strong> Cloud repository coordinating all digital information throughout project lifecycles (Autodesk Construction Cloud).</p>
-            <p><strong>LOD (Level of Development):</strong> Industry framework indicating the degree to which an element's geometry and associated information can be relied upon.</p>
-            <p><strong>EUI (Energy Use Intensity):</strong> Metric denoting annual operational energy consumption relative to total floor area. The KLUST High-Performance Campus Directive sets a target ceiling of <strong>90 kWh/m²/year</strong> for early-stage design modeling.</p>
-            <p><strong>Forma Noise Standard:</strong> Acoustic environmental criteria utilized for predictive exterior modeling. Academic study envelopes must not experience ambient road/campus noise exceeding <strong>55 dB(A)</strong> at the building envelope.</p>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    <!-- Right Panel: Interactive BEP Form -->
-    <section class="right-panel">
-      <div class="form-header">
-        <h1>BIM Execution Plan (BEP) - Concept Phase Gateway</h1>
-        <p>Review the client documentation on the left, extract all design constraints, and configure the project execution parameters below.</p>
-      </div>
-
-      <form class="form-body" id="bep-form" onsubmit="event.preventDefault();">
-        
-        <!-- Card 1: Standards -->
-        <div class="form-card">
-          <h2>1. Spatial Coordination & Standards</h2>
-          
-          <div class="input-group">
-            <label for="coord-system">1.1 Spatial Reference Datum</label>
-            <div class="field-instruction">Survey coordinate standard to be inherited in Autodesk Forma.</div>
-            <div class="input-wrapper">
-              <input type="text" id="coord-system" class="input-control" placeholder="e.g. EPSG 3857, WGS 84..." autocomplete="off">
-            </div>
-            <div class="feedback-msg" id="msg-coord"></div>
-          </div>
-
-          <div class="input-group">
-            <label for="lod-select">1.2 Required Level of Development (LOD)</label>
-            <div class="field-instruction">Select the fidelity required for the concept massing phase.</div>
-            <div class="input-wrapper">
-              <select id="lod-select" class="input-control">
-                <option value="">-- Select Target LOD --</option>
-                <option value="LOD 100">LOD 100 - Conceptual Volumes & Spatial Orientation</option>
-                <option value="LOD 200">LOD 200 - Approximate Geometry & Generic Assemblies</option>
-                <option value="LOD 300">LOD 300 - Specific Assemblies, Doors & Windows</option>
-                <option value="LOD 400">LOD 400 - Fabrication & Assembly Detailing</option>
-              </select>
-            </div>
-            <div class="feedback-msg" id="msg-lod"></div>
-          </div>
-
-          <div class="input-group">
-            <label for="height-limit">1.3 Maximum Building Height Envelope (Meters)</label>
-            <div class="field-instruction">Cornice ceiling constraint benchmarked against the Engineering Quad.</div>
-            <div class="input-wrapper">
-              <input type="number" id="height-limit" class="input-control" placeholder="Enter height in meters" step="any">
-            </div>
-            <div class="feedback-msg" id="msg-height"></div>
-          </div>
-        </div>
-
-        <!-- Card 2: Spatial Programming -->
-        <div class="form-card">
-          <h2>2. Spatial Program Allocation</h2>
-
-          <div class="input-group">
-            <label for="target-gfa">2.1 Governed Gross Floor Area (GFA Target)</label>
-            <div class="field-instruction">Gross allowable square meters accounting for all client updates.</div>
-            <div class="input-wrapper">
-              <input type="number" id="target-gfa" class="input-control" placeholder="Total sqm">
-            </div>
-            <div class="feedback-msg" id="msg-gfa"></div>
-          </div>
-
-          <div class="input-group">
-            <label for="green-roof">2.2 Accessible Green Roof Allocation (%)</label>
-            <div class="field-instruction">Calculate proportional share based on Section 3.0 ratio constraints.</div>
-            <div class="input-wrapper">
-              <input type="number" id="green-roof" class="input-control" placeholder="Percentage (0 - 100)">
-            </div>
-            <div class="feedback-msg" id="msg-roof"></div>
-          </div>
-        </div>
-
-        <!-- Card 3: Environmental Criteria -->
-        <div class="form-card">
-          <h2>3. Environmental Simulation Criteria</h2>
-
-          <div class="input-group">
-            <label for="wind-comfort">3.1 Ground Pedestrian Wind Comfort Threshold</label>
-            <div class="field-instruction">Governing Lawson comfort criteria for the ground courtyard.</div>
-            <div class="input-wrapper">
-              <select id="wind-comfort" class="input-control">
-                <option value="">-- Select Comfort Level --</option>
-                <option value="Walking">Walking / Strolling</option>
-                <option value="Standing">Standing / Transitory</option>
-                <option value="Sitting">Sitting / Long-term Leisure</option>
-                <option value="Comfortable">Unchecked / General</option>
-              </select>
-            </div>
-            <div class="feedback-msg" id="msg-wind"></div>
-          </div>
-
-          <div class="input-group">
-            <label for="noise-limit">3.2 Maximum Facade Noise Exposure (dB(A))</label>
-            <div class="field-instruction">Acoustic envelope threshold for academic study zones.</div>
-            <div class="input-wrapper">
-              <input type="number" id="noise-limit" class="input-control" placeholder="dB(A)">
-            </div>
-            <div class="feedback-msg" id="msg-noise"></div>
-          </div>
-
-          <div class="input-group">
-            <label for="target-eui">3.3 Target Operational EUI (kWh/m²/year)</label>
-            <div class="field-instruction">Energy baseline benchmark specified in technical glossary.</div>
-            <div class="input-wrapper">
-              <input type="number" id="target-eui" class="input-control" placeholder="kWh/m²/yr">
-            </div>
-            <div class="feedback-msg" id="msg-eui"></div>
-          </div>
-        </div>
-
-        <!-- Form Submission Button -->
-        <div class="form-footer">
-          <button type="button" class="submit-btn" id="submit-btn" disabled>Submit BEP for Gateway Approval</button>
-        </div>
-
-      </form>
-    </section>
-
-  </div>
-
-  <!-- Gateway Approval Modal -->
-  <div class="modal-overlay" id="success-modal">
-    <div class="modal-card">
-      <div class="modal-icon">✓</div>
-      <h3>BEP Specification Approved</h3>
-      <p>Congratulations, Lead Architect. Your parameters have been verified against the EIR, Addendum 01, and University Standards. You are now authorized to initiate project setup in Autodesk Forma.</p>
-      <div class="modal-actions">
-        <button class="btn-action btn-forma" onclick="alert('Proceeding to Module 3: Autodesk Forma Site Setup.')">Initialize Autodesk Forma Hub</button>
-        <button class="btn-action btn-dismiss" onclick="document.getElementById('success-modal').classList.remove('active')">Review Plan</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Tab Navigation Logic
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabPanes.forEach(pane => pane.classList.remove('active'));
-
-        button.classList.add('active');
-        const targetTab = document.getElementById(button.dataset.tab);
-        if (targetTab) targetTab.classList.add('active');
-      });
-    });
-
-    // Form Inputs & Validation Rules
-    const formFields = {
-      coord: {
-        el: document.getElementById('coord-system'),
-        msg: document.getElementById('msg-coord'),
-        validate: (val) => {
-          const clean = val.trim().toUpperCase().replace(/[-\s]/g, '');
-          if (clean === 'WGS84') return { valid: true, msg: 'Correct. WGS 84 datum identified.' };
-          return { valid: false, msg: 'Incorrect datum. Inspect Section 1.0 of the EIR document.' };
-        }
-      },
-      lod: {
-        el: document.getElementById('lod-select'),
-        msg: document.getElementById('msg-lod'),
-        validate: (val) => {
-          if (val === 'LOD 100') return { valid: true, msg: 'Correct. Concept massing requires LOD 100.' };
-          if (!val) return { valid: false, msg: 'Please select an LOD specification.' };
-          return { valid: false, msg: 'Detail too high. Review Section 2.0 regarding phase deliverables.' };
-        }
-      },
-      height: {
-        el: document.getElementById('height-limit'),
-        msg: document.getElementById('msg-height'),
-        validate: (val) => {
-          const num = parseFloat(val);
-          if (num === 24) return { valid: true, msg: 'Correct. 24.0m maximum cornice line enforced.' };
-          return { valid: false, msg: 'Incorrect height. Check the Engineering Quad benchmark in Section 2.0.' };
-        }
-      },
-      gfa: {
-        el: document.getElementById('target-gfa'),
-        msg: document.getElementById('msg-gfa'),
-        validate: (val) => {
-          const num = parseFloat(val);
-          if (num === 6000) return { valid: true, msg: 'Correct. You captured the Addendum 01 reduction.' };
-          if (num === 6500) return { valid: false, msg: 'Trap alert: 6,500 sqm was the original target. Check the Addendums tab!' };
-          return { valid: false, msg: 'Incorrect GFA target. Refer to Addendum 01.' };
-        }
-      },
-      roof: {
-        el: document.getElementById('green-roof'),
-        msg: document.getElementById('msg-roof'),
-        validate: (val) => {
-          const num = parseFloat(val);
-          if (num === 10) return { valid: true, msg: 'Exact math! 30% remainder split 2:1 results in 10% green roof.' };
-          if (num === 30) return { valid: false, msg: '30% is the remainder before applying the 2:1 ratio. Re-read Section 3.0.' };
-          return { valid: false, msg: 'Review the 2:1 ratio for public amenities vs green roof in Section 3.0.' };
-        }
-      },
-      wind: {
-        el: document.getElementById('wind-comfort'),
-        msg: document.getElementById('msg-wind'),
-        validate: (val) => {
-          if (val === 'Sitting') return { valid: true, msg: 'Correct. Addendum 01 updated threshold for outdoor cafe.' };
-          if (val === 'Standing') return { valid: false, msg: 'Superseded requirement. Check Addendum 01 for courtyard changes.' };
-          return { valid: false, msg: 'Select the updated comfort criteria specified in Addendum 01.' };
-        }
-      },
-      noise: {
-        el: document.getElementById('noise-limit'),
-        msg: document.getElementById('msg-noise'),
-        validate: (val) => {
-          const num = parseFloat(val);
-          if (num === 55) return { valid: true, msg: 'Correct acoustic ceiling verified from Glossary.' };
-          return { valid: false, msg: 'Review the Forma Noise Standard in the Glossary tab.' };
-        }
-      },
-      eui: {
-        el: document.getElementById('target-eui'),
-        msg: document.getElementById('msg-eui'),
-        validate: (val) => {
-          const num = parseFloat(val);
-          if (num === 90) return { valid: true, msg: 'Verified against University High-Performance directive.' };
-          return { valid: false, msg: 'Inspect the EUI benchmark defined in the Glossary tab.' };
-        }
-      }
-    };
-
-    const submitBtn = document.getElementById('submit-btn');
-    const progressFill = document.getElementById('progress-fill');
-    const progressPercent = document.getElementById('progress-percent');
-    const modal = document.getElementById('success-modal');
-
-    // Validation runner
-    function evaluateForm() {
-      let validCount = 0;
-      const totalKeys = Object.keys(formFields);
-
-      totalKeys.forEach(key => {
-        const item = formFields[key];
-        const val = item.el.value;
-
-        if (!val || val.trim() === '') {
-          item.el.classList.remove('valid', 'invalid');
-          item.msg.classList.remove('show', 'error', 'success');
-          return;
-        }
-
-        const res = item.validate(val);
-        item.msg.textContent = res.msg;
-        item.msg.classList.add('show');
-
-        if (res.valid) {
-          item.el.classList.add('valid');
-          item.el.classList.remove('invalid');
-          item.msg.classList.add('success');
-          item.msg.classList.remove('error');
-          validCount++;
-        } else {
-          item.el.classList.add('invalid');
-          item.el.classList.remove('valid');
-          item.msg.classList.add('error');
-          item.msg.classList.remove('success');
-        }
-      });
-
-      const pct = Math.round((validCount / totalKeys.length) * 100);
-      progressFill.style.width = pct + '%';
-      progressPercent.textContent = pct + '%';
-
-      if (validCount === totalKeys.length) {
-        submitBtn.removeAttribute('disabled');
-      } else {
-        submitBtn.setAttribute('disabled', 'true');
-      }
-    }
-
-    // Attach listeners
-    Object.values(formFields).forEach(item => {
-      item.el.addEventListener('input', evaluateForm);
-      item.el.addEventListener('change', evaluateForm);
-    });
-
-    submitBtn.addEventListener('click', () => {
-      modal.classList.add('active');
-    });
-  </script>
-</body>
-</html>
+    /* =========================================
+       VIEW 2: FORMA EXECUTION CHECKLIST
+       ========================================= */
+    .
