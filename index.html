@@ -1,115 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KLUST BIM Studio: EIR to Autodesk Forma</title>
-  <style>
-    :root {
-      --bg-dark: #12161f;
-      --panel-bg: #ffffff;
-      --panel-border: #e2e8f0;
-      --brand-primary: #0284c7;
-      --brand-primary-hover: #0369a1;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --doc-bg: #f8fafc;
-      --success: #16a34a;
-      --error: #dc2626;
-      --accent: #f59e0b;
-      --warning: #f59e0b;
-    }
+<!-- Module 5 (Updated with Submission Workflow) -->
+        <section class="module-section" id="module-5">
+          <div class="module-header">
+            <h1>Module 5: Environmental Validation & Submission</h1>
+            <p>Prove your proposal meets microclimate and acoustic constraints, then submit your evidence.</p>
+          </div>
+          
+          <div class="checklist-group">
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="5"></div>
+              <div class="step-content">
+                <h4>1. Wind Comfort</h4>
+                <p>Run Microclimate > Wind. Verify cafe zone reads as 'Sitting'. Take a screenshot of the results.</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="5"></div>
+              <div class="step-content">
+                <h4>2. Facade Noise</h4>
+                <p>Run Noise analysis. Verify Academic block facades are under 55 dB(A). Take a screenshot of the facades.</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="5"></div>
+              <div class="step-content">
+                <h4>3. Area Metrics Verification</h4>
+                <p>Ensure your final massing is under 6,000 sqm. Take a screenshot of the Area Metrics dashboard.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pro-tip" id="submission-instructions" style="display: none; background: #e0f2fe; border-color: var(--brand-primary); color: #0369a1;">
+            <strong>Gateway Cleared!</strong> You have completed all modules. Please click the button below to upload your 3 screenshots and record your Student ID for grading.
+          </div>
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      min-height: 100vh;
-    }
-
-    .app-view {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      width: 100%;
-    }
-
-    /* --- SHARED HEADER --- */
-    header {
-      background-color: #0f172a;
-      color: #f8fafc;
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #334155;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    header .brand-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
-    header .brand-badge {
-      background: var(--brand-primary);
-      font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase;
-    }
-    .progress-container { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: #94a3b8; }
-    .progress-bar-bg { width: 140px; height: 8px; background-color: #334155; border-radius: 9999px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; transition: width 0.3s ease; }
-    .fill-blue { background-color: var(--brand-primary); width: 0%; }
-    .fill-green { background-color: var(--success); width: 0%; }
-
-    .workspace { display: flex; flex: 1; flex-wrap: wrap; background-color: var(--panel-bg); }
-
-    /* =========================================
-       VIEW 1: EIR TO BEP SIMULATOR
-       ========================================= */
-    .left-panel { flex: 1 1 40%; min-width: 320px; background-color: var(--doc-bg); border-right: 1px solid #cbd5e1; display: flex; flex-direction: column; }
-    .tab-bar { display: flex; background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
-    .tab-btn { flex: 1; padding: 1rem; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; }
-    .tab-btn.active { background-color: var(--doc-bg); color: var(--brand-primary); border-bottom: 2px solid var(--brand-primary); }
-    .tab-badge { background: #dc2626; color: white; font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 999px; }
-    
-    .doc-viewer { padding: 2rem; line-height: 1.65; font-size: 0.95rem; color: #334155; }
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; }
-    .doc-header { border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-    .doc-header h2 { font-size: 1.3rem; color: #0f172a; margin-bottom: 0.25rem; }
-    .doc-meta { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
-    .doc-section { margin-bottom: 1.5rem; }
-    .callout-box { background: #eff6ff; border-left: 4px solid var(--brand-primary); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; }
-
-    .right-panel { flex: 1 1 50%; min-width: 320px; display: flex; flex-direction: column; }
-    .form-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--panel-border); background-color: #ffffff; }
-    .form-header h1 { font-size: 1.35rem; color: #0f172a; }
-    .form-body { padding: 1.5rem 2rem 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .form-card { background: #ffffff; border: 1px solid var(--panel-border); border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .form-card h2 { font-size: 1rem; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
-    
-    .input-group { margin-bottom: 1.25rem; }
-    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem; }
-    .input-control { width: 100%; padding: 0.75rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
-    .input-control.valid { border-color: var(--success); background-color: #f0fdf4; }
-    .input-control.invalid { border-color: var(--error); background-color: #fef2f2; }
-    .feedback-msg { font-size: 0.78rem; margin-top: 0.35rem; line-height: 1.4; display: none; }
-    .feedback-msg.show { display: block; }
-    .feedback-msg.error { color: var(--error); font-weight: 500; }
-    .feedback-msg.success { color: var(--success); font-weight: 500; }
-    
-    .submit-btn { width: 100%; padding: 1rem; background-color: var(--brand-primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-    .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
-
-    /* Modal */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal-overlay.active { display: flex; }
-    .modal-card { background: white; width: 100%; max-width: 520px; border-radius: 12px; padding: 2rem; text-align: center; }
-    .modal-icon { width: 56px; height: 56px; background: #dcfce7; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1.25rem; }
-    .btn-action { display: inline-block; padding: 0.75rem 1.25rem; border-radius: 6px; text-decoration: none; font-weight: 600; cursor: pointer; border: none; }
-    .btn-forma { background: var(--brand-primary); color: white; width: 100%; font-size: 1rem; }
-
-    /* =========================================
-       VIEW 2: FORMA EXECUTION CHECKLIST
-       ========================================= */
-    .sidebar { flex: 1 1 25%; min-width: 250px; background-color: var(--doc-bg); border-right: 1px solid var(--panel-border); padding: 1.5rem 0; }
-    .sidebar-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; padding: 0 1.5rem 1rem; }
-    .nav-btn { width: 100%; text-align: left; padding: 1rem 1.
+          <div class="action-footer">
+            <!-- Replace the URL in the window.open function with your actual Google Form Link -->
+            <button class="btn-next" id="btn-final-export" disabled onclick="window.open('https://docs.google.com/forms/d/e/YOUR_FORM_LINK_HERE/viewform', '_blank')">
+              Submit Evidence for Grading
+            </button>
+          </div>
+        </section>
