@@ -1,3 +1,10 @@
+Here is the complete, combined application in a single file.
+
+This code merges both the **EIR to BEP Simulator (Gateway 01)** and the **Forma Execution Checklist (Gateway 02)** into one seamless Single Page Application (SPA). When the student successfully passes the BEP validation and clicks to initialize Autodesk Forma, the website will instantly transition to the execution checklist without needing to load a new page.
+
+You can copy all the code below, paste it into a single `index.html` file, and upload it directly to your GitHub Pages.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -122,4 +129,417 @@
     /* =========================================
        VIEW 2: FORMA EXECUTION CHECKLIST
        ========================================= */
-    .
+    .sidebar { flex: 0 0 280px; background-color: var(--doc-bg); border-right: 1px solid var(--panel-border); display: flex; flex-direction: column; padding: 1.5rem 0; }
+    .sidebar-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; padding: 0 1.5rem 1rem; }
+    .nav-btn { width: 100%; text-align: left; padding: 1rem 1.5rem; background: transparent; border: none; border-left: 4px solid transparent; font-size: 0.95rem; font-weight: 600; color: var(--text-main); cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; }
+    .nav-btn:hover { background-color: #f1f5f9; }
+    .nav-btn.active-nav { background-color: #e0f2fe; border-left-color: var(--brand-primary); color: var(--brand-primary); }
+    .nav-status { font-size: 0.75rem; background: #e2e8f0; color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: 999px; }
+    .nav-btn.active-nav .nav-status { background: var(--brand-primary); color: white; }
+    .nav-btn.completed .nav-status { background: var(--success); color: white; }
+
+    .content-area { flex: 1; background-color: var(--panel-bg); overflow-y: auto; padding: 2.5rem 4rem; }
+    .module-section { display: none; max-width: 800px; margin: 0 auto; }
+    .module-section.active-mod { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .module-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--panel-border); }
+    .module-header h1 { font-size: 1.8rem; color: #0f172a; margin-bottom: 0.5rem; }
+    .module-header p { color: var(--text-muted); line-height: 1.6; }
+
+    .checklist-group { margin-bottom: 2.5rem; }
+    .step-item { background: #f8fafc; border: 1px solid var(--panel-border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; display: flex; gap: 1.25rem; transition: all 0.2s ease; }
+    .step-item.checked { background: #f0fdf4; border-color: #bbf7d0; }
+    .checkbox-wrapper input[type="checkbox"] { width: 1.25rem; height: 1.25rem; cursor: pointer; accent-color: var(--success); margin-top: 0.2rem; }
+    .step-content h4 { font-size: 1rem; color: #0f172a; margin-bottom: 0.4rem; }
+    .step-item.checked .step-content h4 { color: var(--success); text-decoration: line-through; }
+    .step-content p { font-size: 0.9rem; color: #475569; line-height: 1.5; }
+    .pro-tip { background: #fffbeb; border-left: 4px solid var(--warning); padding: 1rem; border-radius: 0 6px 6px 0; margin-top: 1rem; font-size: 0.85rem; color: #92400e; }
+
+    .action-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--panel-border); text-align: right; }
+    .btn-next { background: var(--brand-primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .btn-next:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .btn-next:not(:disabled):hover { background: var(--brand-primary-hover); }
+
+    @media (max-width: 900px) {
+      .workspace { flex-direction: column; height: auto; overflow: auto; }
+      body { overflow: auto; height: auto; }
+      .left-panel { flex: none; height: 450px; }
+      .right-panel, .sidebar, .content-area { flex: none; width: 100%; border-right: none; }
+      .content-area { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =========================================
+       VIEW 1: EIR TO BEP SIMULATOR 
+       ========================================= -->
+  <div id="view-1" class="app-view">
+    <header>
+      <div class="brand-title">
+        <span>KLUST ARCH STUDIO</span>
+        <span class="brand-badge">Gateway 01: BEP</span>
+      </div>
+      <div class="progress-container">
+        <span>BEP Validation: <strong id="progress-percent-1">0%</strong></span>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-blue" id="progress-fill-1"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- Left Panel -->
+      <section class="left-panel">
+        <nav class="tab-bar">
+          <button class="tab-btn active" data-tab="tab-eir">EIR Document</button>
+          <button class="tab-btn" data-tab="tab-addendum">Addendums <span class="tab-badge">1 New</span></button>
+          <button class="tab-btn" data-tab="tab-glossary">Glossary</button>
+        </nav>
+
+        <div class="doc-viewer">
+          <!-- EIR Tab -->
+          <article class="tab-pane active" id="tab-eir">
+            <div class="doc-header">
+              <h2>Employer's Information Requirements (EIR)</h2>
+              <div class="doc-meta">Project: KLUST Innovation Pavilion | Phase: RIBA Stage 2</div>
+            </div>
+            <div class="callout-box"><strong>Lead Architect Note:</strong> Extract parameters for the BEP. Check datums, extents, and programmatic math.</div>
+            <div class="doc-section">
+              <h3>1.0 Site Context & Coordinate Reference</h3>
+              <p>Topographical data provided by the university's land surveyor has been calibrated to the <strong>WGS 84</strong> geographic reference datum.</p>
+            </div>
+            <div class="doc-section">
+              <h3>2.0 Volumetric Constraints</h3>
+              <p>Vertical massing shall not exceed the cornice elevation of the Engineering Quadrangle, benchmarked at exactly <strong>24.0 meters</strong>. Deliverables are required at <strong>LOD 100</strong>.</p>
+            </div>
+            <div class="doc-section">
+              <h3>3.0 Programmatic Allocation</h3>
+              <p>The original target Gross Floor Area (GFA) was 6,500 sqm. Academic labs must occupy 40% of the volume. Commercial incubators must constitute 30%. The remaining space is distributed between public amenities and accessible green roofs in a 2:1 ratio.</p>
+            </div>
+          </article>
+
+          <!-- Addendum Tab -->
+          <article class="tab-pane" id="tab-addendum">
+            <div class="doc-header">
+              <h2>Project Addendum 01</h2>
+              <div class="doc-meta">Priority: Critical Update</div>
+            </div>
+            <div class="callout-box" style="background:#fffbeb; border-color:var(--accent);"><strong>Notice:</strong> Information here supersedes previous briefs.</div>
+            <div class="doc-section">
+              <h3>Item A: Utility Realignment (GFA Revision)</h3>
+              <p>Due to a utility easement, the maximum permissible Gross Floor Area (GFA) is officially capped at <strong>6,000 sqm</strong>.</p>
+            </div>
+            <div class="doc-section">
+              <h3>Item B: Microclimate Standard</h3>
+              <p>With a new outdoor cafe, pedestrian wind analysis must satisfy comfort levels strictly for <strong>Sitting</strong>.</p>
+            </div>
+          </article>
+
+          <!-- Glossary Tab -->
+          <article class="tab-pane" id="tab-glossary">
+            <div class="doc-header">
+              <h2>Project Glossary</h2>
+              <div class="doc-meta">Faculty Standards Manual</div>
+            </div>
+            <div class="doc-section">
+              <p><strong>CDE:</strong> Common Data Environment (Autodesk Construction Cloud).</p>
+              <p><strong>EUI:</strong> Target ceiling of <strong>90 kWh/m²/year</strong> for early-stage design.</p>
+              <p><strong>Forma Noise Standard:</strong> External noise mapping for academic zones must not exceed <strong>55 dB(A)</strong>.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Right Panel -->
+      <section class="right-panel">
+        <div class="form-header">
+          <h1>BIM Execution Plan (BEP)</h1>
+          <p>Extract constraints from the client documents to configure project parameters.</p>
+        </div>
+
+        <form class="form-body" id="bep-form" onsubmit="event.preventDefault();">
+          <div class="form-card">
+            <h2>1. Spatial Coordination</h2>
+            <div class="input-group">
+              <label>1.1 Spatial Reference Datum</label>
+              <input type="text" id="coord-system" class="input-control" placeholder="e.g. WGS 84" autocomplete="off">
+              <div class="feedback-msg" id="msg-coord"></div>
+            </div>
+            <div class="input-group">
+              <label>1.2 Required LOD</label>
+              <select id="lod-select" class="input-control">
+                <option value="">-- Select Target LOD --</option>
+                <option value="LOD 100">LOD 100</option>
+                <option value="LOD 200">LOD 200</option>
+                <option value="LOD 300">LOD 300</option>
+              </select>
+              <div class="feedback-msg" id="msg-lod"></div>
+            </div>
+            <div class="input-group">
+              <label>1.3 Max Height Limit (Meters)</label>
+              <input type="number" id="height-limit" class="input-control" placeholder="Meters">
+              <div class="feedback-msg" id="msg-height"></div>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <h2>2. Spatial Programming</h2>
+            <div class="input-group">
+              <label>2.1 Target GFA (sqm)</label>
+              <input type="number" id="target-gfa" class="input-control" placeholder="Total sqm">
+              <div class="feedback-msg" id="msg-gfa"></div>
+            </div>
+            <div class="input-group">
+              <label>2.2 Accessible Green Roof Allocation (%)</label>
+              <input type="number" id="green-roof" class="input-control" placeholder="%">
+              <div class="feedback-msg" id="msg-roof"></div>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <h2>3. Environmental Criteria</h2>
+            <div class="input-group">
+              <label>3.1 Wind Comfort Threshold</label>
+              <select id="wind-comfort" class="input-control">
+                <option value="">-- Select Comfort Level --</option>
+                <option value="Walking">Walking</option>
+                <option value="Standing">Standing</option>
+                <option value="Sitting">Sitting</option>
+              </select>
+              <div class="feedback-msg" id="msg-wind"></div>
+            </div>
+            <div class="input-group">
+              <label>3.2 Max Facade Noise Exposure (dB(A))</label>
+              <input type="number" id="noise-limit" class="input-control" placeholder="dB(A)">
+              <div class="feedback-msg" id="msg-noise"></div>
+            </div>
+            <div class="input-group">
+              <label>3.3 Target Operational EUI (kWh/m²/year)</label>
+              <input type="number" id="target-eui" class="input-control" placeholder="kWh/m²/yr">
+              <div class="feedback-msg" id="msg-eui"></div>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button type="button" class="submit-btn" id="submit-btn" disabled>Submit BEP for Approval</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="success-modal">
+      <div class="modal-card">
+        <div class="modal-icon">✓</div>
+        <h3>BEP Approved</h3>
+        <p>Parameters verified against the EIR, Addendum 01, and Glossary. You may proceed to Forma.</p>
+        <div class="modal-actions">
+          <button class="btn-action btn-forma" id="btn-transition">Initialize Autodesk Forma Hub</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       VIEW 2: FORMA EXECUTION CHECKLIST 
+       ========================================= -->
+  <div id="view-2" class="app-view" style="display: none;">
+    <header>
+      <div class="brand-title">
+        <span>KLUST ARCH STUDIO</span>
+        <span class="brand-badge">Gateway 02: Execution</span>
+      </div>
+      <div class="progress-container">
+        <span>Forma Progress: <strong id="progress-percent-2">0%</strong></span>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-green" id="progress-fill-2"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Forma Modules</div>
+        <button class="nav-btn active-nav" data-target="module-3" id="btn-mod-3">
+          Module 3: Site Setup <span class="nav-status" id="status-mod-3">0/4</span>
+        </button>
+        <button class="nav-btn" data-target="module-4" id="btn-mod-4">
+          Module 4: Massing <span class="nav-status" id="status-mod-4">0/3</span>
+        </button>
+        <button class="nav-btn" data-target="module-5" id="btn-mod-5">
+          Module 5: Analysis <span class="nav-status" id="status-mod-5">0/2</span>
+        </button>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content-area">
+        <!-- Module 3 -->
+        <section class="module-section active-mod" id="module-3">
+          <div class="module-header">
+            <h1>Module 3: Establishing the Site</h1>
+            <p>Apply BEP parameters to the 3D Forma canvas.</p>
+          </div>
+          <div class="checklist-group">
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="3"></div>
+              <div class="step-content"><h4>1. Link CDE</h4><p>Create project and link to KLUST ACC Hub.</p></div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="3"></div>
+              <div class="step-content"><h4>2. Import Map</h4><p>Locate Sector B, Nilai, and Order Terrain Data.</p></div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="3"></div>
+              <div class="step-content"><h4>3. WGS 84 Datum</h4><p>Set Project Settings coordinate system to WGS 84.</p></div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="3"></div>
+              <div class="step-content"><h4>4. 24m Height Limit</h4><p>Use Constraints tool to set a 24m ceiling over Sector B.</p></div>
+            </div>
+          </div>
+          <div class="action-footer"><button class="btn-next" onclick="switchMod('module-4')">Next Module</button></div>
+        </section>
+
+        <!-- Module 4 -->
+        <section class="module-section" id="module-4">
+          <div class="module-header">
+            <h1>Module 4: Data-Driven Massing</h1>
+            <p>Comply with the 6,000 sqm GFA and area distribution targets.</p>
+          </div>
+          <div class="checklist-group">
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="4"></div>
+              <div class="step-content"><h4>1. Custom Functions</h4><p>Create Academic, Commercial, Public, and Green Roof.</p></div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="4"></div>
+              <div class="step-content"><h4>2. Assign Blocks</h4><p>Draw massing under 24m and assign the functions.</p></div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="4"></div>
+              <div class="step-content"><h4>3. Validate Metrics</h4><p>Ensure Area Metrics dashboard hits exactly 6,000 sqm with the 40/30/20/10 split.</p></div>
+            </div>
+          </div>
+          <div class="pro-tip"><strong>Tip:</strong> Iterate variations using the Explore tool if GFA is over limits.</div>
+          <div class="action-footer"><button class="btn-next" onclick="switchMod('module-5')">Next Module</button></div>
+        </section>
+
+        <!-- Module 5 -->
+        <section class="module-section" id="module-5">
+          <div class="module-header">
+            <h1>Module 5: Environmental Validation</h1>
+            <p>Prove your proposal meets microclimate and acoustic constraints.</p>
+          </div>
+          <div class="checklist-group">
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="5"></div>
+              <div class="step-content"><h4>1. Wind Comfort</h4><p>Run Microclimate > Wind. Verify cafe zone reads as 'Sitting'.</p></div>
+            </div>
+            <div class="step-item">
+              <div class="checkbox-wrapper"><input type="checkbox" class="task-check" data-module="5"></div>
+              <div class="step-content"><h4>2. Facade Noise</h4><p>Run Noise analysis. Verify Academic block facades are under 55 dB(A).</p></div>
+            </div>
+          </div>
+          <div class="action-footer"><button class="btn-next" id="btn-final-export" disabled onclick="alert('Gateway Cleared! Ready for Revit.')">Export to Revit</button></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    /* --- VIEW 1 LOGIC (BEP FORM) --- */
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabPanes.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    const formFields = {
+      coord: { el: document.getElementById('coord-system'), msg: document.getElementById('msg-coord'), validate: val => val.toUpperCase().replace(/[-\s]/g, '') === 'WGS84' ? {v:true, m:'WGS 84 datum identified.'} : {v:false, m:'Check Section 1.0.'} },
+      lod: { el: document.getElementById('lod-select'), msg: document.getElementById('msg-lod'), validate: val => val === 'LOD 100' ? {v:true, m:'LOD 100 confirmed.'} : {v:false, m:'Review Section 2.0.'} },
+      height: { el: document.getElementById('height-limit'), msg: document.getElementById('msg-height'), validate: val => parseFloat(val) === 24 ? {v:true, m:'24.0m limit confirmed.'} : {v:false, m:'Check Section 2.0.'} },
+      gfa: { el: document.getElementById('target-gfa'), msg: document.getElementById('msg-gfa'), validate: val => parseFloat(val) === 6000 ? {v:true, m:'Addendum 01 captured.'} : {v:false, m:'Check the Addendums tab!'} },
+      roof: { el: document.getElementById('green-roof'), msg: document.getElementById('msg-roof'), validate: val => parseFloat(val) === 10 ? {v:true, m:'2:1 split calculated.'} : {v:false, m:'Check the 2:1 ratio in Section 3.0.'} },
+      wind: { el: document.getElementById('wind-comfort'), msg: document.getElementById('msg-wind'), validate: val => val === 'Sitting' ? {v:true, m:'Addendum criteria confirmed.'} : {v:false, m:'Check Addendum 01.'} },
+      noise: { el: document.getElementById('noise-limit'), msg: document.getElementById('msg-noise'), validate: val => parseFloat(val) === 55 ? {v:true, m:'Glossary verified.'} : {v:false, m:'Check the Glossary.'} },
+      eui: { el: document.getElementById('target-eui'), msg: document.getElementById('msg-eui'), validate: val => parseFloat(val) === 90 ? {v:true, m:'Glossary verified.'} : {v:false, m:'Check the Glossary.'} }
+    };
+
+    const submitBtn = document.getElementById('submit-btn');
+    const modal = document.getElementById('success-modal');
+    const pFill1 = document.getElementById('progress-fill-1');
+    const pPct1 = document.getElementById('progress-percent-1');
+
+    function evaluateForm() {
+      let validCount = 0;
+      Object.keys(formFields).forEach(k => {
+        const item = formFields[k]; const val = item.el.value;
+        if (!val) { item.el.className='input-control'; item.msg.className='feedback-msg'; return; }
+        const res = item.validate(val);
+        item.msg.textContent = res.m; item.msg.className = `feedback-msg show ${res.v ? 'success' : 'error'}`;
+        item.el.className = `input-control ${res.v ? 'valid' : 'invalid'}`;
+        if(res.v) validCount++;
+      });
+      const pct = Math.round((validCount / 8) * 100);
+      pFill1.style.width = pct + '%'; pPct1.textContent = pct + '%';
+      submitBtn.disabled = validCount !== 8;
+    }
+
+    Object.values(formFields).forEach(i => { i.el.addEventListener('input', evaluateForm); i.el.addEventListener('change', evaluateForm); });
+    submitBtn.addEventListener('click', () => modal.classList.add('active'));
+
+    /* --- TRANSITION LOGIC --- */
+    document.getElementById('btn-transition').addEventListener('click', () => {
+      document.getElementById('view-1').style.display = 'none';
+      document.getElementById('view-2').style.display = 'flex';
+      modal.classList.remove('active');
+    });
+
+    /* --- VIEW 2 LOGIC (FORMA CHECKLIST) --- */
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const modSecs = document.querySelectorAll('.module-section');
+    function switchMod(id) {
+      navBtns.forEach(b => b.classList.remove('active-nav'));
+      modSecs.forEach(s => s.classList.remove('active-mod'));
+      document.querySelector(`[data-target="${id}"]`).classList.add('active-nav');
+      document.getElementById(id).classList.add('active-mod');
+    }
+    navBtns.forEach(b => b.addEventListener('click', e => switchMod(e.currentTarget.dataset.target)));
+
+    const checks = document.querySelectorAll('.task-check');
+    const pFill2 = document.getElementById('progress-fill-2');
+    const pPct2 = document.getElementById('progress-percent-2');
+    const finalBtn = document.getElementById('btn-final-export');
+    const mCounts = { '3':4, '4':3, '5':2 };
+
+    checks.forEach(c => c.addEventListener('change', () => {
+      let tCheck = 0; let mCheck = {'3':0,'4':0,'5':0};
+      checks.forEach(b => {
+        if(b.checked) { tCheck++; mCheck[b.dataset.module]++; b.closest('.step-item').classList.add('checked'); }
+        else { b.closest('.step-item').classList.remove('checked'); }
+      });
+      const pct = Math.round((tCheck / 9) * 100);
+      pFill2.style.width = pct + '%'; pPct2.textContent = pct + '%';
+      
+      Object.keys(mCounts).forEach(m => {
+        const sSpan = document.getElementById(`status-mod-${m}`);
+        const btn = document.getElementById(`btn-mod-${m}`);
+        sSpan.textContent = `${mCheck[m]}/${mCounts[m]}`;
+        if(mCheck[m] === mCounts[m]) { btn.classList.add('completed'); sSpan.textContent = "DONE"; }
+        else { btn.classList.remove('completed'); }
+      });
+      finalBtn.disabled = tCheck !== 9;
+    }));
+  </script>
+</body>
+</html>
+
+```
