@@ -6,7 +6,7 @@
   <title>KLUST BIM Studio: EIR to Autodesk Forma</title>
   <style>
     :root {
-      --bg-dark: #12161f;
+      --bg-light: #f1f5f9;
       --panel-bg: #ffffff;
       --panel-border: #e2e8f0;
       --brand-primary: #0284c7;
@@ -16,38 +16,36 @@
       --doc-bg: #f8fafc;
       --success: #16a34a;
       --error: #dc2626;
-      --accent: #f59e0b;
       --warning: #f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Natural scrolling body, light background */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-dark);
+      background-color: var(--bg-light);
       color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      line-height: 1.6;
     }
 
     .app-view {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
       width: 100%;
-      background-color: var(--bg-dark);
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: var(--panel-bg);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      min-height: 100vh;
     }
 
     /* --- SHARED HEADER --- */
     header {
       background-color: #0f172a;
-      color: #f8fafc;
+      color: #ffffff;
       padding: 1rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #334155;
       flex-wrap: wrap;
       gap: 1rem;
     }
@@ -56,43 +54,185 @@
       background: var(--brand-primary);
       font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase;
     }
-    .progress-container { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: #94a3b8; }
-    .progress-bar-bg { width: 140px; height: 8px; background-color: #334155; border-radius: 9999px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; transition: width 0.3s ease; }
-    .fill-blue { background-color: var(--brand-primary); width: 0%; }
-    .fill-green { background-color: var(--success); width: 0%; }
+    .progress-container { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: #cbd5e1; }
+    .progress-bar-bg { width: 140px; height: 8px; background-color: #334155; border-radius: 999px; }
+    .progress-bar-fill { height: 100%; transition: width 0.3s ease; border-radius: 999px; }
+    .fill-blue { background-color: #38bdf8; width: 0%; }
+    .fill-green { background-color: #4ade80; width: 0%; }
 
-    .workspace { display: flex; flex: 1; flex-wrap: wrap; background-color: var(--panel-bg); align-items: stretch; }
+    /* --- WORKSPACE LAYOUT (Natural Flow) --- */
+    .workspace {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+    }
 
-    /* =========================================
-       VIEW 1: EIR TO BEP SIMULATOR
-       ========================================= */
-    .left-panel { flex: 1 1 40%; min-width: 320px; background-color: var(--doc-bg); border-right: 1px solid #cbd5e1; display: flex; flex-direction: column; }
-    .tab-bar { display: flex; background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
-    .tab-btn { flex: 1; padding: 1rem; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; }
-    .tab-btn.active { background-color: var(--doc-bg); color: var(--brand-primary); border-bottom: 2px solid var(--brand-primary); }
-    .tab-badge { background: #dc2626; color: white; font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 999px; }
+    /* Left Panel (Documents) */
+    .left-panel {
+      flex: 1 1 45%;
+      min-width: 300px;
+      background-color: var(--doc-bg);
+      border-right: 1px solid var(--panel-border);
+      border-bottom: 1px solid var(--panel-border);
+    }
     
-    .doc-viewer { padding: 2rem; line-height: 1.65; font-size: 0.95rem; color: #334155; overflow-y: auto; max-height: calc(100vh - 120px); }
+    .tab-bar { display: flex; background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
+    .tab-btn { flex: 1; padding: 1rem; border: none; background: transparent; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .tab-btn.active { background-color: var(--doc-bg); color: var(--brand-primary); border-bottom: 3px solid var(--brand-primary); }
+    .tab-badge { background: var(--error); color: white; font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 999px; margin-left: 5px; }
+    
+    .doc-viewer { padding: 2rem; font-size: 0.95rem; }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
     .doc-header { border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
     .doc-header h2 { font-size: 1.3rem; color: #0f172a; margin-bottom: 0.25rem; }
-    .doc-meta { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
     .doc-section { margin-bottom: 1.5rem; }
-    .callout-box { background: #eff6ff; border-left: 4px solid var(--brand-primary); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; }
+    .callout-box { background: #eff6ff; border-left: 4px solid var(--brand-primary); padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; }
 
-    .right-panel { flex: 1 1 50%; min-width: 320px; display: flex; flex-direction: column; max-height: calc(100vh - 70px); overflow-y: auto; }
-    .form-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--panel-border); background-color: #ffffff; }
-    .form-header h1 { font-size: 1.35rem; color: #0f172a; }
-    .form-body { padding: 1.5rem 2rem 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .form-card { background: #ffffff; border: 1px solid var(--panel-border); border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .form-card h2 { font-size: 1rem; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    /* Right Panel (Form/Checklist) */
+    .right-panel, .content-area {
+      flex: 1 1 55%;
+      min-width: 300px;
+      padding: 2rem;
+    }
+    
+    .form-header, .module-header { margin-bottom: 2rem; border-bottom: 2px solid var(--panel-border); padding-bottom: 1rem; }
+    .form-header h1, .module-header h1 { font-size: 1.5rem; color: #0f172a; margin-bottom: 0.5rem; }
+    
+    .form-card { background: #fff; border: 1px solid var(--panel-border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .form-card h2 { font-size: 1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem; }
     
     .input-group { margin-bottom: 1.25rem; }
-    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem; }
-    .input-control { width: 100%; padding: 0.75rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+    .input-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .input-control { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
     .input-control.valid { border-color: var(--success); background-color: #f0fdf4; }
     .input-control.invalid { border-color: var(--error); background-color: #fef2f2; }
-    .feedback-msg { font-size: 0.78rem; margin-top: 0.35rem; line-height: 1.4; display: none; }
+    
+    .feedback-msg { font-size: 0.8rem; margin-top: 0.5rem; display: none; }
     .feedback-msg.show { display: block; }
+    .feedback-msg.success { color: var(--success); }
+    .feedback-msg.error { color: var(--error); }
+    
+    .submit-btn, .btn-next { width: 100%; padding: 1rem; background-color: var(--brand-primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; text-align: center; }
+    .submit-btn:disabled, .btn-next:disabled { background-color: #cbd5e1; cursor: not-allowed; }
+
+    /* View 2 Specifics */
+    .sidebar { flex: 1 1 25%; min-width: 250px; background-color: var(--doc-bg); border-right: 1px solid var(--panel-border); padding: 1.5rem 0; }
+    .sidebar-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; padding: 0 1.5rem 1rem; }
+    .nav-btn { width: 100%; text-align: left; padding: 1rem 1.5rem; background: transparent; border: none; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-left: 4px solid transparent; display: flex; justify-content: space-between; }
+    .nav-btn.active-nav { background-color: #e0f2fe; border-left-color: var(--brand-primary); color: var(--brand-primary); }
+    .nav-status { font-size: 0.75rem; background: #e2e8f0; color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: 999px; }
+    
+    .module-section { display: none; }
+    .module-section.active-mod { display: block; }
+    
+    .step-item { background: #f8fafc; border: 1px solid var(--panel-border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; display: flex; gap: 1rem; }
+    .step-item.checked { background: #f0fdf4; border-color: #bbf7d0; }
+    .step-item input[type="checkbox"] { width: 1.5rem; height: 1.5rem; cursor: pointer; }
+    .step-content h4 { font-size: 1.05rem; margin-bottom: 0.25rem; }
+    .step-item.checked .step-content h4 { color: var(--success); text-decoration: line-through; }
+    
+    .pro-tip { background: #fffbeb; border-left: 4px solid var(--warning); padding: 1rem; margin: 1.5rem 0; font-size: 0.9rem; }
+    
+    /* Overlay Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; }
+    .modal-overlay.active { display: flex; }
+    .modal-card { background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; }
+    .modal-icon { font-size: 3rem; color: var(--success); margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+  <!-- VIEW 1: BEP FORM -->
+  <div id="view-1" class="app-view">
+    <header>
+      <div class="brand-title">KLUST ARCH STUDIO <span class="brand-badge">Gateway 01</span></div>
+      <div class="progress-container">
+        BEP Progress: <strong id="progress-percent-1">0%</strong>
+        <div class="progress-bar-bg"><div class="progress-bar-fill fill-blue" id="progress-fill-1"></div></div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- Reference Documents -->
+      <section class="left-panel">
+        <nav class="tab-bar">
+          <button class="tab-btn active" data-tab="tab-eir">EIR</button>
+          <button class="tab-btn" data-tab="tab-addendum">Addendum <span class="tab-badge">1</span></button>
+          <button class="tab-btn" data-tab="tab-glossary">Glossary</button>
+        </nav>
+        <div class="doc-viewer">
+          <article class="tab-pane active" id="tab-eir">
+            <div class="doc-header"><h2>Employer's Information Requirements</h2></div>
+            <div class="callout-box">Extract parameters for the BEP. Check datums, extents, and programmatic math.</div>
+            <div class="doc-section">
+              <h3>1.0 Site Context</h3><p>Topographical data has been calibrated to the <strong>WGS 84</strong> datum.</p>
+            </div>
+            <div class="doc-section">
+              <h3>2.0 Volumetric Constraints</h3><p>Vertical massing shall not exceed <strong>24.0 meters</strong>. Deliverables are required at <strong>LOD 100</strong>.</p>
+            </div>
+            <div class="doc-section">
+              <h3>3.0 Programmatic Allocation</h3><p>Academic labs must occupy 40% of the volume. Commercial incubators must constitute 30%. The remaining space is distributed between public amenities and accessible green roofs in a 2:1 ratio. The original GFA target was 6,500 sqm.</p>
+            </div>
+          </article>
+          <article class="tab-pane" id="tab-addendum">
+            <div class="doc-header"><h2>Project Addendum 01</h2></div>
+            <div class="doc-section">
+              <h3>Item A: GFA Revision</h3><p>The maximum permissible Gross Floor Area (GFA) is officially capped at <strong>6,000 sqm</strong>.</p>
+              <h3>Item B: Microclimate</h3><p>Pedestrian wind analysis must satisfy comfort levels strictly for <strong>Sitting</strong>.</p>
+            </div>
+          </article>
+          <article class="tab-pane" id="tab-glossary">
+            <div class="doc-header"><h2>Project Glossary</h2></div>
+            <div class="doc-section">
+              <p><strong>EUI:</strong> Target ceiling of <strong>90 kWh/m²/year</strong>.</p>
+              <p><strong>Noise Standard:</strong> External noise mapping must not exceed <strong>55 dB(A)</strong>.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- BEP Input Form -->
+      <section class="right-panel">
+        <div class="form-header"><h1>BIM Execution Plan (BEP)</h1></div>
+        <form id="bep-form" onsubmit="event.preventDefault();">
+          <div class="form-card">
+            <h2>1. Spatial Coordination</h2>
+            <div class="input-group">
+              <label>1.1 Spatial Reference Datum</label>
+              <input type="text" id="coord-system" class="input-control" placeholder="e.g. WGS 84">
+              <div class="feedback-msg" id="msg-coord"></div>
+            </div>
+            <div class="input-group">
+              <label>1.2 Required LOD</label>
+              <select id="lod-select" class="input-control">
+                <option value="">-- Select Target LOD --</option>
+                <option value="LOD 100">LOD 100</option>
+                <option value="LOD 200">LOD 200</option>
+              </select>
+              <div class="feedback-msg" id="msg-lod"></div>
+            </div>
+            <div class="input-group">
+              <label>1.3 Max Height Limit (Meters)</label>
+              <input type="number" id="height-limit" class="input-control">
+              <div class="feedback-msg" id="msg-height"></div>
+            </div>
+          </div>
+          <div class="form-card">
+            <h2>2. Spatial Programming</h2>
+            <div class="input-group">
+              <label>2.1 Target GFA (sqm)</label>
+              <input type="number" id="target-gfa" class="input-control">
+              <div class="feedback-msg" id="msg-gfa"></div>
+            </div>
+            <div class="input-group">
+              <label>2.2 Green Roof Allocation (%)</label>
+              <input type="number" id="green-roof" class="input-control">
+              <div class="feedback-msg" id="msg-roof"></div>
+            </div>
+          </div>
+          <div class="form-card">
+            <h2>3. Environmental Criteria</h2>
+            <div class="input-group">
+              <label>3.1 Wind Comfort Threshold</label>
+              <select id
